@@ -216,8 +216,8 @@ class ABCIViewIE(InfoExtractor):
                 stream, lambda x: x['streams']['hls'][sd], compat_str)
             if not sd_url:
                 continue
+            sd_url = sd_url.replace('720', '1080')
             formats = self._extract_m3u8_formats(
-                sd_url = sd_url.replace('720', '1080')
                 tokenize_url(sd_url, token), video_id, 'mp4',
                 entry_protocol='m3u8_native', m3u8_id='hls', fatal=False)
             if formats:
