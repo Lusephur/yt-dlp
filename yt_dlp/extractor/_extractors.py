@@ -60,6 +60,7 @@ from .americastestkitchen import (
     AmericasTestKitchenIE,
     AmericasTestKitchenSeasonIE,
 )
+from .angel import AngelIE
 from .animeondemand import AnimeOnDemandIE
 from .anvato import AnvatoIE
 from .aol import AolIE
@@ -218,6 +219,7 @@ from .camdemy import (
     CamdemyFolderIE
 )
 from .cammodels import CamModelsIE
+from .camtasia import CamtasiaEmbedIE
 from .camwithher import CamWithHerIE
 from .canalalpha import CanalAlphaIE
 from .canalplus import CanalplusIE
@@ -408,6 +410,7 @@ from .dplay import (
     DiscoveryLifeIE,
     AnimalPlanetIE,
     TLCIE,
+    MotorTrendIE,
     DiscoveryPlusIndiaIE,
     DiscoveryNetworksDeIE,
     DiscoveryPlusItalyIE,
@@ -443,7 +446,7 @@ from .dw import (
     DWIE,
     DWArticleIE,
 )
-from .eagleplatform import EaglePlatformIE
+from .eagleplatform import EaglePlatformIE, ClipYouEmbedIE
 from .ebaumsworld import EbaumsWorldIE
 from .echomsk import EchoMskIE
 from .egghead import (
@@ -628,6 +631,7 @@ from .gronkh import (
     GronkhVodsIE
 )
 from .groupon import GrouponIE
+from .harpodeon import HarpodeonIE
 from .hbo import HBOIE
 from .hearthisat import HearThisAtIE
 from .heise import HeiseIE
@@ -640,6 +644,7 @@ from .hidive import HiDiveIE
 from .historicfilms import HistoricFilmsIE
 from .hitbox import HitboxIE, HitboxLiveIE
 from .hitrecord import HitRecordIE
+from .holodex import HolodexIE
 from .hotnewhiphop import HotNewHipHopIE
 from .hotstar import (
     HotStarIE,
@@ -658,6 +663,7 @@ from .hse import (
     HSEShowIE,
     HSEProductIE,
 )
+from .genericembeds import HTML5MediaEmbedIE
 from .huajiao import HuajiaoIE
 from .huya import HuyaLiveIE
 from .huffpost import HuffPostIE
@@ -760,6 +766,7 @@ from .kicker import KickerIE
 from .kickstarter import KickStarterIE
 from .kinja import KinjaEmbedIE
 from .kinopoisk import KinoPoiskIE
+from .kompas import KompasVideoIE
 from .konserthusetplay import KonserthusetPlayIE
 from .koo import KooIE
 from .kth import KTHIE
@@ -1205,19 +1212,8 @@ from .openrec import (
 from .ora import OraTVIE
 from .orf import (
     ORFTVthekIE,
-    ORFFM4IE,
     ORFFM4StoryIE,
-    ORFOE1IE,
-    ORFOE3IE,
-    ORFNOEIE,
-    ORFWIEIE,
-    ORFBGLIE,
-    ORFOOEIE,
-    ORFSTMIE,
-    ORFKTNIE,
-    ORFSBGIE,
-    ORFTIRIE,
-    ORFVBGIE,
+    ORFRadioIE,
     ORFIPTVIE,
 )
 from .outsidetv import OutsideTVIE
@@ -1240,7 +1236,6 @@ from .paramountplus import (
     ParamountPlusIE,
     ParamountPlusSeriesIE,
 )
-from .parliamentliveuk import ParliamentLiveUKIE
 from .parlview import ParlviewIE
 from .patreon import (
     PatreonIE,
@@ -1391,6 +1386,8 @@ from .rai import (
     RaiPlaySoundIE,
     RaiPlaySoundLiveIE,
     RaiPlaySoundPlaylistIE,
+    RaiNewsIE,
+    RaiSudtirolIE,
     RaiIE,
 )
 from .raywenderlich import (
@@ -1409,6 +1406,7 @@ from .rcti import (
     RCTIPlusTVIE,
 )
 from .rds import RDSIE
+from .redbee import ParliamentLiveUKIE, RTBFIE
 from .redbulltv import (
     RedBullTVIE,
     RedBullEmbedIE,
@@ -1442,7 +1440,6 @@ from .rokfin import (
 from .roosterteeth import RoosterTeethIE, RoosterTeethSeriesIE
 from .rottentomatoes import RottenTomatoesIE
 from .rozhlas import RozhlasIE
-from .rtbf import RTBFIE
 from .rte import RteIE, RteRadioIE
 from .rtlnl import (
     RtlNlIE,
@@ -1548,6 +1545,7 @@ from .shared import (
     SharedIE,
     VivoIE,
 )
+from .sharevideos import ShareVideosEmbedIE
 from .shemaroome import ShemarooMeIE
 from .showroomlive import ShowRoomLiveIE
 from .simplecast import (
@@ -1725,6 +1723,7 @@ from .telequebec import (
 )
 from .teletask import TeleTaskIE
 from .telewebion import TelewebionIE
+from .tempo import TempoIE
 from .tennistv import TennisTVIE
 from .tenplay import TenPlayIE
 from .testurl import TestURLIE

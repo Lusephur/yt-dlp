@@ -1,4 +1,5 @@
 import collections
+import contextvars
 import itertools
 import json
 import os
@@ -9,6 +10,7 @@ import time
 from .common import PostProcessor
 from ..compat import functools, imghdr
 from ..utils import (
+    MEDIA_EXTENSIONS,
     ISO639Utils,
     Popen,
     PostProcessingError,
@@ -81,6 +83,8 @@ class FFmpegPostProcessorError(PostProcessingError):
 
 
 class FFmpegPostProcessor(PostProcessor):
+    _ffmpeg_location = contextvars.ContextVar('ffmpeg_location', default=None)
+
     def __init__(self, downloader=None):
         PostProcessor.__init__(self, downloader)
         self._prefer_ffmpeg = self.get_param('prefer_ffmpeg', True)
@@ -100,12 +104,13 @@ class FFmpegPostProcessor(PostProcessor):
     def _determine_executables(self):
         programs = [*self._ffmpeg_to_avconv.keys(), *self._ffmpeg_to_avconv.values()]
 
-        location = self.get_param('ffmpeg_location')
+        location = self.get_param('ffmpeg_location', self._ffmpeg_location.get())
         if location is None:
             return {p: p for p in programs}
 
         if not os.path.exists(location):
-            self.report_warning(f'ffmpeg-location {location} does not exist! Continuing without ffmpeg')
+            self.report_warning(
+                f'ffmpeg-location {location} does not exist! Continuing without ffmpeg', only_once=True)
             return {}
         elif os.path.isdir(location):
             dirname, basename = location, None
@@ -167,9 +172,9 @@ class FFmpegPostProcessor(PostProcessor):
         return self.probe_basename
 
     def _get_version(self, kind):
-        executables = (kind, self._ffmpeg_to_avconv[kind])
+        executables = (kind, )
         if not self._prefer_ffmpeg:
-            executables = reversed(executables)
+            executables = (kind, self._ffmpeg_to_avconv[kind])
         basename, version, features = next(filter(
             lambda x: x[1], ((p, *self._get_ffmpeg_version(p)) for p in executables)), (None, None, {}))
         if kind == 'ffmpeg':
@@ -421,7 +426,7 @@ class FFmpegPostProcessor(PostProcessor):
 
 
 class FFmpegExtractAudioPP(FFmpegPostProcessor):
-    COMMON_AUDIO_EXTS = ('wav', 'flac', 'm4a', 'aiff', 'mp3', 'ogg', 'mka', 'opus', 'wma')
+    COMMON_AUDIO_EXTS = MEDIA_EXTENSIONS.common_audio + ('wma', )
     SUPPORTED_EXTS = tuple(ACODECS.keys())
     FORMAT_RE = create_mapping_re(('best', *SUPPORTED_EXTS))
 
@@ -528,7 +533,7 @@ class FFmpegExtractAudioPP(FFmpegPostProcessor):
 
 
 class FFmpegVideoConvertorPP(FFmpegPostProcessor):
-    SUPPORTED_EXTS = ('mp4', 'mkv', 'flv', 'webm', 'mov', 'avi', 'mka', 'ogg', *FFmpegExtractAudioPP.SUPPORTED_EXTS)
+    SUPPORTED_EXTS = (*MEDIA_EXTENSIONS.common_video, *sorted(MEDIA_EXTENSIONS.common_audio + ('aac', 'vorbis')))
     FORMAT_RE = create_mapping_re(SUPPORTED_EXTS)
     _ACTION = 'converting'
 
@@ -797,6 +802,8 @@ class FFmpegMetadataPP(FFmpegPostProcessor):
 
 
 class FFmpegMergerPP(FFmpegPostProcessor):
+    SUPPORTED_EXTS = MEDIA_EXTENSIONS.common_video
+
     @PostProcessor._restrict_to(images=False)
     def run(self, info):
         filename = info['filepath']
@@ -921,7 +928,7 @@ class FFmpegFixupDuplicateMoovPP(FFmpegCopyStreamPP):
 
 
 class FFmpegSubtitlesConvertorPP(FFmpegPostProcessor):
-    SUPPORTED_EXTS = ('srt', 'vtt', 'ass', 'lrc')
+    SUPPORTED_EXTS = MEDIA_EXTENSIONS.subtitles
 
     def __init__(self, downloader=None, format=None):
         super().__init__(downloader)
@@ -1043,7 +1050,7 @@ class FFmpegSplitChaptersPP(FFmpegPostProcessor):
 
 
 class FFmpegThumbnailsConvertorPP(FFmpegPostProcessor):
-    SUPPORTED_EXTS = ('jpg', 'png', 'webp')
+    SUPPORTED_EXTS = MEDIA_EXTENSIONS.thumbnails
     FORMAT_RE = create_mapping_re(SUPPORTED_EXTS)
 
     def __init__(self, downloader=None, format=None):
@@ -1077,8 +1084,9 @@ class FFmpegThumbnailsConvertorPP(FFmpegPostProcessor):
         thumbnail_conv_filename = replace_extension(thumbnail_filename, target_ext)
 
         self.to_screen(f'Converting thumbnail "{thumbnail_filename}" to {target_ext}')
+        _, source_ext = os.path.splitext(thumbnail_filename)
         self.real_run_ffmpeg(
-            [(thumbnail_filename, ['-f', 'image2', '-pattern_type', 'none'])],
+            [(thumbnail_filename, [] if source_ext == '.gif' else ['-f', 'image2', '-pattern_type', 'none'])],
             [(thumbnail_conv_filename.replace('%', '%%'), self._options(target_ext))])
         return thumbnail_conv_filename
 
@@ -1149,9 +1157,9 @@ class FFmpegConcatPP(FFmpegPostProcessor):
         if len(in_files) < len(entries):
             raise PostProcessingError('Aborting concatenation because some downloads failed')
 
-        ie_copy = self._downloader._playlist_infodict(info)
         exts = traverse_obj(entries, (..., 'requested_downloads', 0, 'ext'), (..., 'ext'))
-        ie_copy['ext'] = exts[0] if len(set(exts)) == 1 else 'mkv'
+        ie_copy = collections.ChainMap({'ext': exts[0] if len(set(exts)) == 1 else 'mkv'},
+                                       info, self._downloader._playlist_infodict(info))
         out_file = self._downloader.prepare_filename(ie_copy, 'pl_video')
 
         files_to_delete = self.concat_files(in_files, out_file)
