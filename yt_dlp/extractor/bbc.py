@@ -442,9 +442,9 @@ class BBCCoUkIE(InfoExtractor):
                 subtitles = self.extract_subtitles(media, programme_id)
                 
       # add 1080p equivalent of 720p version if found
-      for fmt in formats:
+        for fmt in formats:
           if '-video=5070000.m3u8' not in fmt.get('url', ''):
-                continue
+            continue
           fhd = dict(fmt)
           fhd['url'] = fmt['url'].replace('-video=5070000.m3u8', '-video=12000000.m3u8')
           fhd['height'] = 1080
