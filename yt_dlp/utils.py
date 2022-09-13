@@ -1497,6 +1497,10 @@ class YoutubeDLHTTPSHandler(urllib.request.HTTPSHandler):
             raise
 
 
+def is_path_like(f):
+    return isinstance(f, (str, bytes, os.PathLike))
+
+
 class YoutubeDLCookieJar(http.cookiejar.MozillaCookieJar):
     """
     See [1] for cookie file format.
@@ -1515,7 +1519,7 @@ class YoutubeDLCookieJar(http.cookiejar.MozillaCookieJar):
 
     def __init__(self, filename=None, *args, **kwargs):
         super().__init__(None, *args, **kwargs)
-        if self.is_path(filename):
+        if is_path_like(filename):
             filename = os.fspath(filename)
         self.filename = filename
 
@@ -1523,13 +1527,9 @@ class YoutubeDLCookieJar(http.cookiejar.MozillaCookieJar):
     def _true_or_false(cndn):
         return 'TRUE' if cndn else 'FALSE'
 
-    @staticmethod
-    def is_path(file):
-        return isinstance(file, (str, bytes, os.PathLike))
-
     @contextlib.contextmanager
     def open(self, file, *, write=False):
-        if self.is_path(file):
+        if is_path_like(file):
             with open(file, 'w' if write else 'r', encoding='utf-8') as f:
                 yield f
         else:
@@ -1610,7 +1610,7 @@ class YoutubeDLCookieJar(http.cookiejar.MozillaCookieJar):
                     if f'{line.strip()} '[0] in '[{"':
                         raise http.cookiejar.LoadError(
                             'Cookies file must be Netscape formatted, not JSON. See  '
-                            'https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl')
+                            'https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp')
                     write_string(f'WARNING: skipping cookie file entry due to {e}: {line!r}\n')
                     continue
         cf.seek(0)
@@ -3625,7 +3625,7 @@ def determine_protocol(info_dict):
 
     ext = determine_ext(url)
     if ext == 'm3u8':
-        return 'm3u8'
+        return 'm3u8' if info_dict.get('is_live') else 'm3u8_native'
     elif ext == 'f4m':
         return 'f4m'
 
@@ -5554,6 +5554,9 @@ class Config:
         self.parsed_args = self.own_args
         for location in opts.config_locations or []:
             if location == '-':
+                if location in self._loaded_paths:
+                    continue
+                self._loaded_paths.add(location)
                 self.append_config(shlex.split(read_stdin('options'), comments=True), label='stdin')
                 continue
             location = os.path.join(directory, expand_path(location))
