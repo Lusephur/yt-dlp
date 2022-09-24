@@ -591,9 +591,14 @@ class LenientJSONDecoder(json.JSONDecoder):
     def decode(self, s):
         if self.transform_source:
             s = self.transform_source(s)
-        if self.ignore_extra:
-            return self.raw_decode(s.lstrip())[0]
-        return super().decode(s)
+        try:
+            if self.ignore_extra:
+                return self.raw_decode(s.lstrip())[0]
+            return super().decode(s)
+        except json.JSONDecodeError as e:
+            if e.pos is not None:
+                raise type(e)(f'{e.msg} in {s[e.pos-10:e.pos+10]!r}', s, e.pos)
+            raise
 
 
 def sanitize_open(filename, open_mode):
@@ -762,7 +767,7 @@ def sanitized_Request(url, *args, **kwargs):
 
 
 def expand_path(s):
-    """Expand $ shell variables and ~"""
+    """Expand shell variables and ~"""
     return os.path.expandvars(compat_expanduser(s))
 
 
@@ -3293,7 +3298,7 @@ def js_to_json(code, vars={}, *, strict=False):
                     return '"%d":' % i if v.endswith(':') else '%d' % i
 
             if v in vars:
-                return vars[v]
+                return json.dumps(vars[v])
             if strict:
                 raise ValueError(f'Unknown value: {v}')
 
@@ -3305,6 +3310,7 @@ def js_to_json(code, vars={}, *, strict=False):
     code = re.sub(r'new Map\((\[.*?\])?\)', create_map, code)
     if not strict:
         code = re.sub(r'new Date\((".+")\)', r'\g<1>', code)
+        code = re.sub(r'new \w+\((.*?)\)', lambda m: json.dumps(m.group(0)), code)
 
     return re.sub(r'''(?sx)
         "(?:[^"\\]*(?:\\\\|\\['"nurtbfx/\n]))*[^"\\]*"|

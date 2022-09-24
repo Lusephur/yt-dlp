@@ -21,6 +21,7 @@ from .youtube import (  # Youtube is moved to the top to improve performance
     YoutubeYtBeIE,
     YoutubeYtUserIE,
     YoutubeWatchLaterIE,
+    YoutubeShortsAudioPivotIE
 )
 
 from .abc import (
@@ -1618,6 +1619,7 @@ from .sky import (
 from .slideshare import SlideshareIE
 from .slideslive import SlidesLiveIE
 from .slutload import SlutloadIE
+from .smotrim import SmotrimIE
 from .snotr import SnotrIE
 from .sohu import SohuIE
 from .sonyliv import (
@@ -2141,6 +2143,7 @@ from .whowatch import WhoWatchIE
 from .wistia import (
     WistiaIE,
     WistiaPlaylistIE,
+    WistiaChannelIE,
 )
 from .worldstarhiphop import WorldStarHipHopIE
 from .wppilot import (
