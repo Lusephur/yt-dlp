@@ -865,7 +865,7 @@ class TestRequestsRequestHandler(TestRequestHandlerBase):
             '3 bytes read, 4 more expected'
         ),
         (
-            lambda: urllib3.exceptions.IncompleteRead(partial=3, expected=5),
+            lambda: urllib3.exceptions.ProtocolError('error', urllib3.exceptions.IncompleteRead(partial=3, expected=5)),
             IncompleteRead,
             '3 bytes read, 5 more expected'
         ),
@@ -1292,6 +1292,10 @@ class TestYoutubeDLNetworking:
             rh = self.build_handler(ydl)
             assert 'Youtubedl-no-compression' not in rh.headers
             assert rh.headers.get('Accept-Encoding') == 'identity'
+
+        with FakeYDL({'http_headers': {'Ytdl-socks-proxy': 'socks://localhost:1080'}}) as ydl:
+            rh = self.build_handler(ydl)
+            assert 'Ytdl-socks-proxy' not in rh.headers
 
     def test_build_handler_params(self):
         with FakeYDL({
